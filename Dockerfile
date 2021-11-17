@@ -19,20 +19,20 @@ RUN ls -shal
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o gitserver gitserver.go
 
-
+RUN pwd
 FROM ${LAST_STAGE_REPO}/${LAST_STAGE_BASE}
 
 
-COPY --from=builder /gitserver /usr/bin/gitserver
+COPY --from=builder /gitserver/gitserver /gitserver
 COPY hooks/ /var/lib/git-hooks/
 COPY gitconfig /var/lib/gitconfig/.gitconfig
 RUN mkdir -p /var/lib/git && \
     mkdir -p /var/lib/gitconfig && \
     chmod 777 /var/lib/gitconfig && \
-    chmod 777 /usr/bin/gitserver && \
     ln -s /usr/bin/gitserver /usr/bin/gitrepo-buildconfigs
 VOLUME /var/lib/git
 ENV HOME=/var/lib/gitconfig
-RUN ls -shal /usr/bin/
-RUN chmod +x /usr/bin/gitserver
-ENTRYPOINT ["/usr/bin/gitserver"]
+RUN dnf update 
+RUN dnf -y install git
+RUN chmod +x /gitserver
+ENTRYPOINT ["/gitserver"]
