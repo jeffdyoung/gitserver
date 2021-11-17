@@ -1,7 +1,7 @@
 ARG LAST_STAGE_REPO=quay.io/openshifttest
-ARG LAST_STAGE_BASE=base-alpine:multiarch
+ARG LAST_STAGE_BASE=fedora:multiarch
 
-FROM golang:1.17 AS builder
+FROM docker.io/golang:1.17 AS builder
 WORKDIR /gitserver/
 COPY ./gitserver.go ./
 COPY ./go.mod ./
@@ -16,5 +16,21 @@ COPY ./go.mod ./
 RUN go mod tidy
 RUN ls -shal
 
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o gitserver gitserver.go
 
+
+FROM ${LAST_STAGE_REPO}/${LAST_STAGE_BASE}
+
+
+COPY --from=builder /gitserver /usr/bin/gitserver
+COPY hooks/ /var/lib/git-hooks/
+COPY gitconfig /var/lib/gitconfig/.gitconfig
+RUN mkdir -p /var/lib/git && \
+    mkdir -p /var/lib/gitconfig && \
+    chmod 777 /var/lib/gitconfig && \
+    ln -s /usr/bin/gitserver /usr/bin/gitrepo-buildconfigs
+VOLUME /var/lib/git
+ENV HOME=/var/lib/gitconfig
+
+ENTRYPOINT ["/usr/bin/gitserver"]
