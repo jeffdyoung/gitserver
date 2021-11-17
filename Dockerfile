@@ -32,7 +32,9 @@ RUN mkdir -p /var/lib/git && \
     ln -s /usr/bin/gitserver /usr/bin/gitrepo-buildconfigs
 VOLUME /var/lib/git
 ENV HOME=/var/lib/gitconfig
-RUN dnf update 
+RUN echo "max_parallel_downloads=10">>/etc/dnf/dnf.conf
+RUN echo "fastestmirror=True">>/etc/dnf/dnf.conf
+RUN cat /etc/dnf/dnf.conf
 RUN dnf -y install git
 RUN chmod +x /gitserver
 ENTRYPOINT ["/gitserver"]
